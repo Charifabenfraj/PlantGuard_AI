@@ -1,0 +1,174 @@
+{% extends "detector/base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-brain"></i> Modèles Disponibles</h2>
+            <p class="text-muted">Gérez et comparez les différents modèles de détection</p>
+        </div>
+    </div>
+    
+    <!-- Modèle Actuel -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5><i class="fas fa-star"></i> Modèle Actuel</h5>
+                </div>
+                <div class="card-body">
+                    <h4>{{ current_model.name }}</h4>
+                    <p><strong>Clé:</strong> {{ current_model.key }}</p>
+                    <p><strong>Accuracy:</strong> 
+                        <span class="badge bg-success fs-6">{{ current_model.accuracy|floatformat:2 }}%</span>
+                    </p>
+                    <p><strong>Paramètres:</strong> {{ current_model.params|floatformat:0 }}</p>
+                    <p><strong>Description:</strong> {{ current_model.description }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Liste de tous les modèles -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <h4>Tous les Modèles</h4>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Accuracy</th>
+                            <th>Paramètres</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for model in models %}
+                        <tr {% if model.is_current %}class="table-primary"{% endif %}>
+                            <td>
+                                <strong>{{ model.name }}</strong>
+                                {% if model.is_current %}
+                                    <span class="badge bg-primary ms-2">Actif</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if model.accuracy > 90 %}
+                                    <span class="badge bg-success">{{ model.accuracy }}</span>
+                                {% elif model.accuracy > 80 %}
+                                    <span class="badge bg-warning">{{ model.accuracy }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">{{ model.accuracy }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ model.params }}</td>
+                            <td>{{ model.description }}</td>
+                            <td>
+                                {% if model.exists %}
+                                    <span class="badge bg-success"><i class="fas fa-check"></i> Disponible</span>
+                                {% else %}
+                                    <span class="badge bg-danger"><i class="fas fa-times"></i> Manquant</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if not model.is_current and model.exists %}
+                                <button class="btn btn-sm btn-primary switch-model-btn" 
+                                        data-model-key="{{ model.key }}"
+                                        data-model-name="{{ model.name }}">
+                                    <i class="fas fa-exchange-alt"></i> Utiliser
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="d-flex gap-2">
+                <a href="{% url 'compare_models' %}" class="btn btn-info">
+                    <i class="fas fa-balance-scale"></i> Comparer les Modèles
+                </a>
+                <a href="{% url 'model_stats' %}" class="btn btn-secondary">
+                    <i class="fas fa-chart-bar"></i> Statistiques
+                </a>
+                <button id="save-stats-btn" class="btn btn-success">
+                    <i class="fas fa-save"></i> Sauvegarder Stats (Pickle)
+                </button>
+                <a href="{% url 'home' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.gap-2 {
+    gap: 0.5rem;
+}
+</style>
+
+<script>
+// Basculer vers un autre modèle
+document.querySelectorAll('.switch-model-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const modelKey = this.dataset.modelKey;
+        const modelName = this.dataset.modelName;
+        
+        if (confirm(`Voulez-vous changer le modèle actif vers:\n${modelName}?`)) {
+            const formData = new FormData();
+            formData.append('model_key', modelKey);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+            
+            fetch("{% url 'switch_model' %}", {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`✅ ${data.message}`);
+                    location.reload();
+                } else {
+                    alert(`❌ Erreur: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                alert(`❌ Erreur: ${error}`);
+            });
+        }
+    });
+});
+
+// Sauvegarder les stats en pickle
+document.getElementById('save-stats-btn').addEventListener('click', function() {
+    const formData = new FormData();
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    
+    fetch("{% url 'save_model_stats_pickle' %}", {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`✅ ${data.message}`);
+        } else {
+            alert(`❌ Erreur: ${data.error}`);
+        }
+    })
+    .catch(error => {
+        alert(`❌ Erreur: ${error}`);
+    });
+});
+</script>
+
+{% endblock %}

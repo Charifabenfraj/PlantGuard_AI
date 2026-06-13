@@ -1,0 +1,209 @@
+{% extends 'detector/base.html' %}
+
+{% block title %}Accueil - PlantGuard AI{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="hero-badge">
+        <span class="pulse-dot"></span>
+        IA Active - Precision 94.47%
+    </div>
+    <h1 class="hero-title">
+        Detection <span class="gradient-text">Intelligente</span><br>des Maladies des Plantes
+    </h1>
+    <p class="hero-subtitle">
+        Analysez vos plantes en un clic. Notre modele de Deep Learning detecte 15 maladies avec une precision exceptionnelle.
+    </p>
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <div class="stat-pill">
+            <span class="stat-icon"><i class="fas fa-brain"></i></span>
+            <span>{{ num_classes }} maladies</span>
+        </div>
+        <div class="stat-pill">
+            <span class="stat-icon"><i class="fas fa-bolt"></i></span>
+            <span>Resultat instantane</span>
+        </div>
+        <div class="stat-pill">
+            <span class="stat-icon"><i class="fas fa-chart-line"></i></span>
+            <span>94.47% precision</span>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Card -->
+<div class="glass-card animate-in animate-in-delay-1">
+    <form method="post" action="{% url 'detector:predict' %}" enctype="multipart/form-data" id="uploadForm">
+        {% csrf_token %}
+
+        <div class="upload-zone" id="uploadZone">
+            <i class="fas fa-cloud-arrow-up upload-icon"></i>
+            <h4>Deposez votre image ici</h4>
+            <p>ou cliquez pour selectionner un fichier</p>
+            <p class="mt-2" style="font-size:0.8rem;color:var(--text-muted);">JPG, PNG, JPEG - Max 10MB</p>
+            <input type="file" name="image" id="imageInput" class="d-none" accept="image/*" required>
+            <div class="mt-3">
+                <button type="button" class="btn-glass" onclick="document.getElementById('imageInput').click()">
+                    <i class="fas fa-folder-open me-2"></i> Choisir une image
+                </button>
+            </div>
+        </div>
+
+        <!-- Preview -->
+        <div id="imagePreview" class="d-none text-center mt-4">
+            <div class="preview-container">
+                <img id="preview" src="" alt="Preview">
+                <div class="preview-overlay">
+                    <button type="submit" class="btn-glass" id="analyzeBtn">
+                        <i class="fas fa-magnifying-glass-chart me-2"></i> Analyser
+                    </button>
+                    <button type="button" class="btn-glass-outline" onclick="resetUpload()">
+                        <i class="fas fa-xmark me-2"></i> Annuler
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    {% if not tf_available %}
+    <div class="warning-box mt-4">
+        <h6><i class="fas fa-triangle-exclamation me-2"></i> Attention</h6>
+        <p>TensorFlow n'est pas installe. Installez-le avec : <code style="background:var(--surface);padding:2px 8px;border-radius:6px;">pip install tensorflow</code></p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- How it Works -->
+<div class="glass-card mt-4 animate-in animate-in-delay-2">
+    <h5 style="font-weight:700;margin-bottom:1.2rem;">
+        <i class="fas fa-wand-magic-sparkles me-2" style="color:var(--primary-light);"></i>Comment ca marche
+    </h5>
+    <div class="steps-grid">
+        <div class="step-card">
+            <div class="step-num">1</div>
+            <div class="step-icon"><i class="fas fa-camera"></i></div>
+            <h6>Photographiez</h6>
+            <small>Une feuille ou plante</small>
+        </div>
+        <div class="step-card">
+            <div class="step-num">2</div>
+            <div class="step-icon"><i class="fas fa-cloud-arrow-up"></i></div>
+            <h6>Telechargez</h6>
+            <small>Glissez ou selectionnez</small>
+        </div>
+        <div class="step-card">
+            <div class="step-num">3</div>
+            <div class="step-icon"><i class="fas fa-microchip"></i></div>
+            <h6>IA Analyse</h6>
+            <small>MobileNetV2 en action</small>
+        </div>
+        <div class="step-card">
+            <div class="step-num">4</div>
+            <div class="step-icon"><i class="fas fa-clipboard-check"></i></div>
+            <h6>Diagnostique</h6>
+            <small>Resultat immediat</small>
+        </div>
+    </div>
+</div>
+
+<!-- Supported Plants -->
+<div class="glass-card mt-4 animate-in animate-in-delay-3">
+    <h5 style="font-weight:700;margin-bottom:1.2rem;">
+        <i class="fas fa-seedling me-2" style="color:var(--primary-light);"></i>Plantes Supportees
+    </h5>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="disease-chip" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.25);">
+                <i class="fas fa-pepper-hot" style="color:#ef4444;"></i>
+                <div>
+                    <div style="font-weight:600;color:var(--text-primary);">Poivron</div>
+                    <small style="color:var(--text-muted);">Bacterial spot, Healthy</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="disease-chip" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.25);">
+                <i class="fas fa-carrot" style="color:#f97316;"></i>
+                <div>
+                    <div style="font-weight:600;color:var(--text-primary);">Pomme de terre</div>
+                    <small style="color:var(--text-muted);">Early/Late blight, Healthy</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="disease-chip" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.25);">
+                <i class="fas fa-apple-whole" style="color:#ef4444;"></i>
+                <div>
+                    <div style="font-weight:600;color:var(--text-primary);">Tomate</div>
+                    <small style="color:var(--text-muted);">12 maladies detectees</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const imageInput = document.getElementById('imageInput');
+    const uploadZone = document.getElementById('uploadZone');
+    const imagePreview = document.getElementById('imagePreview');
+    const preview = document.getElementById('preview');
+
+    // File select
+    imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) handleFile(file);
+    });
+
+    // Drag & Drop
+    uploadZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+    });
+
+    uploadZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+    });
+
+    uploadZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+            imageInput.files = e.dataTransfer.files;
+            handleFile(file);
+        }
+    });
+
+    // Click on upload zone
+    uploadZone.addEventListener('click', function(e) {
+        if (e.target.tagName !== 'BUTTON') {
+            imageInput.click();
+        }
+    });
+
+    function handleFile(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            uploadZone.classList.add('d-none');
+            imagePreview.classList.remove('d-none');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function resetUpload() {
+        imageInput.value = '';
+        uploadZone.classList.remove('d-none');
+        imagePreview.classList.add('d-none');
+        preview.src = '';
+    }
+
+    // Show loading on submit
+    document.getElementById('uploadForm').addEventListener('submit', function() {
+        showLoading();
+    });
+</script>
+{% endblock %}

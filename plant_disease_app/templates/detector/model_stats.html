@@ -1,0 +1,219 @@
+{% extends "detector/base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-chart-bar"></i> Statistiques des Modèles</h2>
+            <p class="text-muted">Informations et performances des modèles</p>
+        </div>
+    </div>
+    
+    <!-- Statistiques Globales -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-brain fa-3x text-primary mb-3"></i>
+                    <h4>{{ stats.available_models }}</h4>
+                    <p class="text-muted">Modèles Disponibles</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-memory fa-3x text-success mb-3"></i>
+                    <h4>{{ stats.loaded_models }}</h4>
+                    <p class="text-muted">Modèles Chargés en Mémoire</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-star fa-3x text-warning mb-3"></i>
+                    <h4>{{ stats.current_model.name|truncatewords:3 }}</h4>
+                    <p class="text-muted">Modèle Actif</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Graphique de Performance -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-line"></i> Performance des Modèles</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Détails des Modèles -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-list"></i> Détails des Modèles</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Clé</th>
+                                    <th>Accuracy</th>
+                                    <th>Paramètres</th>
+                                    <th>État</th>
+                                    <th>Status Fichier</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for model in stats.models_list %}
+                                <tr {% if model.is_current %}class="table-primary"{% endif %}>
+                                    <td>
+                                        <strong>{{ model.name }}</strong>
+                                        {% if model.is_current %}
+                                            <span class="badge bg-primary ms-1">ACTIF</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><code>{{ model.key }}</code></td>
+                                    <td>
+                                        <div class="progress" style="height: 25px;">
+                                            {% with accuracy=model.accuracy|cut:'%'|floatformat:0|add:'0' %}
+                                            <div class="progress-bar 
+                                                {% if accuracy >= 90 %}bg-success
+                                                {% elif accuracy >= 70 %}bg-warning
+                                                {% else %}bg-danger{% endif %}"
+                                                role="progressbar"
+                                                style="width: {{ accuracy }}%;"
+                                                aria-valuenow="{{ accuracy }}"
+                                                aria-valuemin="0"
+                                                aria-valuemax="100">
+                                                {{ model.accuracy }}
+                                            </div>
+                                            {% endwith %}
+                                        </div>
+                                    </td>
+                                    <td>{{ model.params }}</td>
+                                    <td>
+                                        {% if model.is_current %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check-circle"></i> En cours d'utilisation
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-pause-circle"></i> Inactif
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if model.exists %}
+                                            <span class="text-success">
+                                                <i class="fas fa-check"></i> Disponible
+                                            </span>
+                                        {% else %}
+                                            <span class="text-danger">
+                                                <i class="fas fa-exclamation-triangle"></i> Manquant
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Pickle (si disponibles) -->
+    {% if stats.pickle_stats %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h5><i class="fas fa-file-archive"></i> Stats Sauvegardées (Pickle)</h5>
+                </div>
+                <div class="card-body">
+                    <pre class="bg-light p-3 rounded">{{ stats.pickle_stats|pprint }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <a href="{% url 'models_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour aux Modèles
+            </a>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Créer le graphique de performance
+const ctx = document.getElementById('performanceChart').getContext('2d');
+
+const models = {{ stats.models_list|safe }};
+const labels = models.map(m => m.name);
+const accuracies = models.map(m => parseFloat(m.accuracy.replace('%', '')));
+const colors = accuracies.map(acc => {
+    if (acc >= 90) return 'rgba(40, 167, 69, 0.7)';  // Vert
+    if (acc >= 70) return 'rgba(255, 193, 7, 0.7)';  // Jaune
+    return 'rgba(220, 53, 69, 0.7)';  // Rouge
+});
+
+const chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Accuracy (%)',
+            data: accuracies,
+            backgroundColor: colors,
+            borderColor: colors.map(c => c.replace('0.7', '1')),
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                    callback: function(value) {
+                        return value + '%';
+                    }
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return 'Accuracy: ' + context.parsed.y.toFixed(2) + '%';
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+
+{% endblock %}

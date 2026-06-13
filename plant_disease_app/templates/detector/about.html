@@ -1,0 +1,146 @@
+{% extends 'detector/base.html' %}
+
+{% block title %}A propos - PlantGuard AI{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="text-center mb-5 animate-in">
+    <div class="hero-badge">
+        <span class="pulse-dot"></span>
+        Deep Learning &middot; MobileNetV2
+    </div>
+    <h1 class="hero-title" style="font-size:2.4rem;">
+        A propos du <span class="gradient-text">Projet</span>
+    </h1>
+    <p class="hero-subtitle">
+        Systeme de detection automatique des maladies des plantes alimente par le Deep Learning et le Transfer Learning.
+    </p>
+</div>
+
+<!-- Features -->
+<div class="about-grid animate-in animate-in-delay-1">
+    <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-brain"></i></div>
+        <h5>Intelligence Artificielle</h5>
+        <p>Reseaux de neurones convolutifs (CNN) et Transfer Learning avec MobileNetV2 pour une detection optimale.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-database"></i></div>
+        <h5>Dataset PlantVillage</h5>
+        <p>Entraine sur des milliers d'images de feuilles de plantes malades et saines du dataset PlantVillage.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-gauge-high"></i></div>
+        <h5>Haute Precision</h5>
+        <p>Modele optimise avec une precision superieure a 94% sur les donnees de test, 3M+ parametres.</p>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="glass-card mt-4 animate-in animate-in-delay-2">
+    <h5 style="font-weight:700;margin-bottom:1.5rem;text-align:center;">
+        <i class="fas fa-chart-simple me-2" style="color:var(--primary-light);"></i> Statistiques du Modele
+    </h5>
+    <div class="stats-grid">
+        <div class="stat-box">
+            <div class="stat-number">{{ num_classes }}</div>
+            <div class="stat-label">Classes detectees</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number">{{ img_size }}px</div>
+            <div class="stat-label">Taille des images</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number">3M+</div>
+            <div class="stat-label">Parametres</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number">94.47%</div>
+            <div class="stat-label">Precision</div>
+        </div>
+    </div>
+</div>
+
+<!-- Diseases -->
+<div class="glass-card mt-4 animate-in animate-in-delay-3">
+    <h5 style="font-weight:700;margin-bottom:1.2rem;">
+        <i class="fas fa-list-check me-2" style="color:var(--primary-light);"></i> Maladies Detectables ({{ num_classes }})
+    </h5>
+    <div class="disease-grid">
+        {% for class_name in classes %}
+        <div class="disease-chip">
+            <i class="fas fa-leaf"></i>
+            <span>{{ class_name }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Tech Stack -->
+<div class="glass-card mt-4 animate-in animate-in-delay-4">
+    <h5 style="font-weight:700;margin-bottom:1.5rem;text-align:center;">
+        <i class="fas fa-code me-2" style="color:var(--primary-light);"></i> Technologies Utilisees
+    </h5>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <h6 style="font-weight:600;color:var(--text-secondary);margin-bottom:1rem;">
+                <i class="fas fa-server me-2"></i> Backend
+            </h6>
+            <div class="tech-grid" style="justify-content:flex-start;">
+                <span class="tech-pill"><i class="fab fa-python"></i> Django 6.0</span>
+                <span class="tech-pill"><i class="fas fa-brain"></i> TensorFlow 2.x</span>
+                <span class="tech-pill"><i class="fas fa-cube"></i> Keras</span>
+                <span class="tech-pill"><i class="fas fa-eye"></i> OpenCV</span>
+                <span class="tech-pill"><i class="fas fa-calculator"></i> NumPy</span>
+            </div>
+            <h6 style="font-weight:600;color:var(--text-secondary);margin:1.5rem 0 1rem;">
+                <i class="fas fa-robot me-2"></i> Modeles IA
+            </h6>
+            <div class="tech-grid" style="justify-content:flex-start;">
+                <span class="tech-pill"><i class="fas fa-star"></i> Transfer Learning (MobileNetV2)</span>
+                <span class="tech-pill"><i class="fas fa-layer-group"></i> CNN Simple (3 blocs)</span>
+                <span class="tech-pill"><i class="fas fa-network-wired"></i> CNN Profond (5 blocs)</span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h6 style="font-weight:600;color:var(--text-secondary);margin-bottom:1rem;">
+                <i class="fas fa-palette me-2"></i> Frontend
+            </h6>
+            <div class="tech-grid" style="justify-content:flex-start;">
+                <span class="tech-pill"><i class="fab fa-bootstrap"></i> Bootstrap 5</span>
+                <span class="tech-pill"><i class="fab fa-font-awesome"></i> Font Awesome 6</span>
+                <span class="tech-pill"><i class="fab fa-js"></i> JavaScript</span>
+                <span class="tech-pill"><i class="fas fa-wand-magic-sparkles"></i> CSS Animations</span>
+            </div>
+            <h6 style="font-weight:600;color:var(--text-secondary);margin:1.5rem 0 1rem;">
+                <i class="fas fa-lightbulb me-2"></i> Fonctionnalites
+            </h6>
+            <ul style="list-style:none;padding:0;margin:0;">
+                <li style="padding:0.3rem 0;color:var(--text-secondary);font-size:0.9rem;">
+                    <i class="fas fa-check-circle me-2" style="color:var(--primary-light);"></i> Upload drag & drop
+                </li>
+                <li style="padding:0.3rem 0;color:var(--text-secondary);font-size:0.9rem;">
+                    <i class="fas fa-check-circle me-2" style="color:var(--primary-light);"></i> Prediction en temps reel
+                </li>
+                <li style="padding:0.3rem 0;color:var(--text-secondary);font-size:0.9rem;">
+                    <i class="fas fa-check-circle me-2" style="color:var(--primary-light);"></i> Top 3 des resultats
+                </li>
+                <li style="padding:0.3rem 0;color:var(--text-secondary);font-size:0.9rem;">
+                    <i class="fas fa-check-circle me-2" style="color:var(--primary-light);"></i> Recommandations intelligentes
+                </li>
+                <li style="padding:0.3rem 0;color:var(--text-secondary);font-size:0.9rem;">
+                    <i class="fas fa-check-circle me-2" style="color:var(--primary-light);"></i> Detection de confusions
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- CTA -->
+<div class="text-center mt-5 mb-4 animate-in animate-in-delay-4">
+    <a href="{% url 'detector:home' %}" class="btn-glass" style="padding:16px 44px;">
+        <i class="fas fa-play me-2"></i> Essayer Maintenant
+    </a>
+</div>
+{% endblock %}

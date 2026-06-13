@@ -1,0 +1,21 @@
+{
+    "CNN Simple": {
+        "test_accuracy": 0.9157285094261169,
+        "test_loss": 0.3621995747089386,
+        "params": 16872527,
+        "training_time": 10988.78069114685
+    },
+    "CNN Profond": {
+        "test_accuracy": 0.04856867343187332,
+        "test_loss": 2.649308443069458,
+        "params": 19265327,
+        "training_time": 80849.5485033989
+    },
+    "Transfer Learning": {
+        "test_accuracy": 0.9446767568588257,
+        "test_loss": 0.17069782316684723,
+        "params": 3049039,
+        "training_time": 6977.7411777973175
+    },
+    "best_model": "Transfer Learning"
+}

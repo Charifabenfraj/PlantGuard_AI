@@ -1,0 +1,12 @@
+# Python
+.venv/
+__pycache__/
+
+# Dataset
+PlantVillage/
+
+# Modèles volumineux
+*.h5
+
+# Jupyter
+.ipynb_checkpoints/

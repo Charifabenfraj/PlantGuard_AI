@@ -1,0 +1,186 @@
+{% extends "detector/base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-balance-scale"></i> Comparer les Modèles</h2>
+            <p class="text-muted">Testez une image avec tous les modèles disponibles</p>
+        </div>
+    </div>
+    
+    <!-- Formulaire d'upload -->
+    <div class="row mt-4">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-body">
+                    <form id="compare-form" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="image" class="form-label">Choisir une image de feuille</label>
+                            <input type="file" class="form-control" id="image" name="image" 
+                                   accept="image/*" required>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="export" name="export">
+                            <label class="form-check-label" for="export">
+                                Exporter les résultats (JSON, Pickle, TXT)
+                            </label>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <img id="preview" src="" alt="Prévisualisation" 
+                                 style="max-width: 100%; display: none; border-radius: 8px;">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-balance-scale"></i> Comparer les Modèles
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Résultats de comparaison -->
+    <div id="results-section" class="row mt-5" style="display: none;">
+        <div class="col-12">
+            <h3>Résultats de Comparaison</h3>
+            <div id="results-container" class="row g-3"></div>
+        </div>
+    </div>
+    
+    <!-- Loading -->
+    <div id="loading" class="text-center mt-4" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Chargement...</span>
+        </div>
+        <p class="mt-2">Comparaison en cours...</p>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <a href="{% url 'models_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour aux Modèles
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+// Prévisualisation de l'image
+document.getElementById('image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('preview');
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Soumettre le formulaire
+document.getElementById('compare-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const exportCheckbox = document.getElementById('export');
+    formData.append('export', exportCheckbox.checked ? 'true' : 'false');
+    
+    // Afficher loading
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('results-section').style.display = 'none';
+    
+    fetch("{% url 'compare_models' %}", {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('loading').style.display = 'none';
+        
+        if (data.success) {
+            displayResults(data.results);
+            
+            // Afficher info export si disponible
+            if (data.results.export_files) {
+                alert(`✅ Résultats exportés:\n` + 
+                      Object.values(data.results.export_files).join('\n'));
+            }
+        } else {
+            alert(`❌ Erreur: ${data.error}`);
+        }
+    })
+    .catch(error => {
+        document.getElementById('loading').style.display = 'none';
+        alert(`❌ Erreur: ${error}`);
+    });
+});
+
+function displayResults(results) {
+    const container = document.getElementById('results-container');
+    container.innerHTML = '';
+    
+    // Retirer export_files du rendu
+    delete results.export_files;
+    
+    // Créer une carte pour chaque modèle
+    for (const [key, result] of Object.entries(results)) {
+        const col = document.createElement('div');
+        col.className = 'col-md-6 col-lg-4';
+        
+        let cardHTML;
+        
+        if (result.error) {
+            cardHTML = `
+                <div class="card border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h5>${result.model_name}</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-danger">❌ Erreur: ${result.error}</p>
+                    </div>
+                </div>
+            `;
+        } else {
+            const badgeClass = result.confidence >= 90 ? 'bg-success' : 
+                              result.confidence >= 70 ? 'bg-warning' : 'bg-danger';
+            
+            const isHealthy = result.prediction.toLowerCase().includes('healthy');
+            const predictionClass = isHealthy ? 'text-success' : 'text-danger';
+            
+            cardHTML = `
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5>${result.model_name}</h5>
+                        <small class="text-muted">Accuracy: ${(result.accuracy * 100).toFixed(2)}%</small>
+                    </div>
+                    <div class="card-body">
+                        <h4 class="${predictionClass}">
+                            ${isHealthy ? '✅' : '⚠️'} ${result.prediction}
+                        </h4>
+                        <p>
+                            <strong>Confiance:</strong>
+                            <span class="badge ${badgeClass} fs-6">
+                                ${result.confidence.toFixed(2)}%
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        col.innerHTML = cardHTML;
+        container.appendChild(col);
+    }
+    
+    document.getElementById('results-section').style.display = 'block';
+}
+</script>
+
+{% endblock %}
